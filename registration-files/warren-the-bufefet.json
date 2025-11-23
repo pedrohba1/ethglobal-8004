@@ -1,0 +1,22 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "WarrenTheBuefet",
+  "description": "Warren the Buefet agent. It buys when other are fearful and sell when they are greedy.",
+  "image": "https://expert-alpaca-337.convex.cloud/api/storage/d7b71c05-5eca-420f-8784-5716124fdf5a",
+  "endpoints": [
+    {
+      "name": "A2A",
+      "endpoint": "https://ethglobalhackaton.vercel.app/.well-known/warrenbuefet/agent-card.json",
+      "version": "0.3.0"
+    },
+    ],
+  "registrations": [
+    {
+      "agentId": 1,
+      "agentRegistry": "eip155:1:0xE6b26308a835F02D23b5bD8De69Cda1D3b05c320"
+    }
+  ],
+  "supportedTrust": [
+    "reputation",
+  ]
+}
