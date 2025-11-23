@@ -1,57 +1,93 @@
-# Sample Hardhat 3 Beta Project (`node:test` and `viem`)
+# ERC‑8004 Agent Registries (Base Sepolia)
 
-This project showcases a Hardhat 3 Beta project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+This repo contains a minimal ERC‑8004 setup with three on‑chain registries and a script to register agents:
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+- IdentityRegistry: agent ids, domain, and address; 0.005 ETH anti‑spam fee
+- ReputationRegistry: server authorizes client feedback; query auth ids
+- ValidationRegistry: request/response validation with expiry slots
 
-## Project Overview
+Built with Hardhat 3 + viem + Ignition.
 
-This example project includes:
+## Layout
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+- contracts/: IdentityRegistry, ReputationRegistry, ValidationRegistry
+- ignition/modules/ERC8004.ts: deploys the three registries
+- ignition/deployments/: saved addresses per chain (e.g. Base Sepolia 84532)
+- scripts/register-agent.ts: register an agent on IdentityRegistry
+- registration-files/: example 8004 agent metadata (for off‑chain hosting)
 
-## Usage
+## Environment
 
-### Running Tests
+Set RPC and keys in `.env` (Hardhat reads them via config variables):
 
-To run all the tests in the project, execute the following command:
+```bash
+# Base Sepolia
+BASE_SEPOLIA_RPC_URL=...
+SEPOLIA_PRIVATE_KEY=0x...
+# Optional override for IdentityRegistry address
+IDENTITY_REGISTRY=0x...
 
-```shell
+# specific for running chaoschain SDK for deploying 
+# to the 8004:
+PRIVATE_KEY=
+PINATA_JWT=
+
+```
+
+
+
+
+## Deploy (Ignition)
+
+Deploy the ERC‑8004 module locally or to Base Sepolia:
+
+```bash
+# Local (simulated)
+npx hardhat ignition deploy ignition/modules/ERC8004.ts
+
+# Base Sepolia
+auth npx hardhat ignition deploy --network base_sepolia ignition/modules/ERC8004.ts
+```
+
+Deployed addresses are saved to `ignition/deployments/chain-<chainId>/deployed_addresses.json` and are auto‑discovered by the scripts.
+
+Current Base Sepolia (84532) addresses in this repo:
+
+- IdentityRegistry: 0xE6b26308a835F02D23b5bD8De69Cda1D3b05c320
+- ReputationRegistry: 0x15D7Ba71AEd52e021A9BE50B57c02dA49A108A58
+- ValidationRegistry: 0xFc9d2d3E7A84bc05387F1Ac683976b727D675D8C
+
+## Register an Agent
+
+The script registers a new agent in IdentityRegistry on Base Sepolia. It resolves the registry address from Ignition for the connected chain, or you can pass `IDENTITY_REGISTRY`.
+
+Fee: 0.005 ETH (burned by the contract).
+
+```bash
+npx hardhat run scripts/register-agent.ts -- <agentDomain> <agentAddress>
+# Example:
+# npx hardhat run scripts/register-agent.ts -- https://example.com/.well-known/agent.json 0xYourAgentEOA
+```
+
+Notes:
+
+- Network is forced to `base_sepolia` inside the script
+- Requires the signer in `SEPOLIA_PRIVATE_KEY` to have ETH on Base Sepolia
+- Looks for `ignition/deployments/chain-84532/deployed_addresses.json` by default
+
+## 8004 Contract Link
+
+Add your block explorer link for the live 8004 IdentityRegistry here:
+
+- TODO: link to IdentityRegistry on Base Sepolia explorer
+
+## Tests
+
+```bash
 npx hardhat test
 ```
 
-You can also selectively run the Solidity or `node:test` tests:
+## Extras
 
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
-```
-
-### Make a deployment to Sepolia
-
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
-
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
-
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+- `scripts/chaoschain-deploy-warren.ts`: example end‑to‑end flow using @chaoschain/sdk (optional, requires PRIVATE_KEY and optional PINATA_JWT)
+- `scripts/send-op-tx.ts`: example of sending a tx on an OP‑typed simulated network

@@ -1,3 +1,6 @@
+.env
+/keys
+
 # Node modules
 /node_modules
 
